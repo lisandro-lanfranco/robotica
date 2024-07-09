@@ -25,6 +25,8 @@ Este proyecto es una simulación de un codificador rotatorio diseñado para su u
 You can access the project online by visiting the following URL:
 Puedes acceder al proyecto en línea visitando la siguiente URL:
 
+https://lisandro-lanfranco.github.io/robotica/sensores/encoder/index.html
+
 ### Local Installation / Instalación Local
 
 1. **Clone the repository / Clonar el repositorio**:
