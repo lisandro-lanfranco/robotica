@@ -6,6 +6,9 @@ This project is a simulation of a rotary encoder designed for use in online clas
 
 Este proyecto es una simulación de un codificador rotatorio diseñado para su uso en clases en línea. El programa permite seleccionar la cantidad de bits del disco desde 4 hasta 8 y puede girar en cualquier dirección presionando las flechas laterales o los botones dispuestos a tal fin.
 
+![Alt text](encoder_screenshot.png)
+
+
 ## Features / Características
 
 - **Bit Selection / Selección de Bits**: Choose between 4 to 8 bits for the encoder disk.
@@ -17,19 +20,25 @@ Este proyecto es una simulación de un codificador rotatorio diseñado para su u
 
 ## Installation / Instalación
 
+### Web Access / Acceso Web
+
+You can access the project online by visiting the following URL:
+Puedes acceder al proyecto en línea visitando la siguiente URL:
+
+### Local Installation / Instalación Local
+
 1. **Clone the repository / Clonar el repositorio**:
    ```sh
    git clone https://github.com/your-username/rotary-encoder-simulation.git
-   ```
-   ```sh
-   git clone https://github.com/tu-usuario/rotary-encoder-simulation.git
-   ```
 
-2. **Open the project in your preferred editor / Abre el proyecto en tu editor preferido**.
+2. Alternatively, host the project on a local web server for better performance:
+Alternativamente, monta el proyecto en un servidor web local para un mejor rendimiento:
 
-3. **Run the project / Ejecuta el proyecto**:
-   Open `index.html` in your web browser.
-   Abre `index.html` en tu navegador web.
+cd rotary-encoder-simulation
+python -m http.server
+
+Then open http://localhost:8000 in your web browser.
+Luego abre http://localhost:8000 en tu navegador web.
 
 ## Usage / Uso
 
