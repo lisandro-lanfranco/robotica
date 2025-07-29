@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Adopción de Brazos Robots</title>
+    <!-- Tailwind CSS for basic styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js library for interactive maps -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        /* Custom styles for the body and container */
+        body {
+            font-family: "Inter", sans-serif; /* Using Inter font as per instructions */
+            background-color: #f0f4f8; /* Light background for the page */
+            color: #333; /* Default text color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Container for the map, styled with Tailwind classes */
+        #map-container {
+            width: 90vw; /* Responsive width */
+            max-width: 1200px; /* Maximum width for larger screens */
+            height: 70vh; /* Responsive height */
+            background-color: #fff; /* White background for the container */
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Styling for the main title */
+        h1 {
+            color: #2c3e50; /* Darker blue for the title */
+            margin-bottom: 20px;
+            font-size: 2.5rem; /* Large font size */
+            text-align: center;
+        }
+        /* Ensure Plotly graph fills its container */
+        .plotly-graph-div {
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main container for the map and title -->
+    <div id="map-container" class="rounded-xl shadow-lg p-6 bg-white">
+        <!-- Title of the map -->
+        <h1 class="text-4xl font-bold text-gray-800 mb-6">Adopción de Brazos Robots en la Industria</h1>
+        <!-- Div where the Plotly map will be rendered -->
+        <div id="robotMap" class="w-full h-full"></div>
+    </div>
+
+    <script>
+        // Ensure the DOM is fully loaded before running the script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Updated data for robot arm adoption by country, based on IFR public summaries (approximate figures)
+            // 'pais': Country name
+            // 'codigo_iso3': ISO 3-letter country code (essential for mapping)
+            // 'robots_implantados': Number of industrial robots implanted (operational stock, mostly 2022-2023 estimates)
+            const data = [
+                {"pais": "China", "codigo_iso3": "CHN", "robots_implantados": 1750000}, // Based on IFR 2024 report summary (1.75M in 2023)
+                {"pais": "Japón", "codigo_iso3": "JPN", "robots_implantados": 435000}, // Based on IFR 2024 report summary (435k in 2023)
+                {"pais": "Corea del Sur", "codigo_iso3": "KOR", "robots_implantados": 375000}, // Based on IFR 2022 data
+                {"pais": "Estados Unidos", "codigo_iso3": "USA", "robots_implantados": 382000}, // Based on IFR 2024 report summary (382k in 2023)
+                {"pais": "Alemania", "codigo_iso3": "DEU", "robots_implantados": 280000}, // Based on IFR 2024 report summary (28k new in 2023, total higher)
+                {"pais": "Italia", "codigo_iso3": "ITA", "robots_implantados": 95000}, // Based on IFR 2022 data
+                {"pais": "Francia", "codigo_iso3": "FRA", "robots_implantados": 58000}, // Based on IFR 2022 data
+                {"pais": "México", "codigo_iso3": "MEX", "robots_implantados": 52000}, // Based on IFR 2022 data
+                {"pais": "España", "codigo_iso3": "ESP", "robots_implantados": 42000}, // Based on IFR 2022 data
+                {"pais": "Tailandia", "codigo_iso3": "THA", "robots_implantados": 40000}, // Based on IFR 2022 data
+                {"pais": "Reino Unido", "codigo_iso3": "GBR", "robots_implantados": 31000}, // Estimated, consistent with trends
+                {"pais": "Canadá", "codigo_iso3": "CAN", "robots_implantados": 28000}, // Estimated, consistent with trends
+                {"pais": "Brasil", "codigo_iso3": "BRA", "robots_implantados": 15000}, // Estimated, higher than 2017 but still lower
+                {"pais": "Rusia", "codigo_iso3": "RUS", "robots_implantados": 13000}, // Estimated, consistent with trends
+                {"pais": "India", "codigo_iso3": "IND", "robots_implantados": 10000}, // Estimated, low density mentioned
+                {"pais": "Australia", "codigo_iso3": "AUS", "robots_implantados": 9000}, // Estimated, consistent with trends
+                {"pais": "Turquía", "codigo_iso3": "TUR", "robots_implantados": 5000}, // Estimated, consistent with trends
+                {"pais": "Polonia", "codigo_iso3": "POL", "robots_implantados": 3500}, // Estimated, consistent with trends
+                {"pais": "Sudáfrica", "codigo_iso3": "ZAF", "robots_implantados": 2500}, // Estimated, consistent with trends
+                {"pais": "Argentina", "codigo_iso3": "ARG", "robots_implantados": 2000}, // Estimated, consistent with trends
+                {"pais": "Chile", "codigo_iso3": "CHL", "robots_implantados": 700}, // Estimated, consistent with trends
+                // Countries with very low or negligible adoption (set to 0 for visual distinction)
+                {"pais": "Egipto", "codigo_iso3": "EGY", "robots_implantados": 0},
+                {"pais": "Nigeria", "codigo_iso3": "NGA", "robots_implantados": 0},
+                {"pais": "Vietnam", "codigo_iso3": "VNM", "robots_implantados": 0},
+                {"pais": "Indonesia", "codigo_iso3": "IDN", "robots_implantados": 0},
+                {"pais": "Kenia", "codigo_iso3": "KEN", "robots_implantados": 0},
+                {"pais": "Perú", "codigo_iso3": "PER", "robots_implantados": 0},
+                {"pais": "Colombia", "codigo_iso3": "COL", "robots_implantados": 0},
+                {"pais": "Venezuela", "codigo_iso3": "VEN", "robots_implantados": 0},
+                {"pais": "Pakistán", "codigo_iso3": "PAK", "robots_implantados": 0},
+                {"pais": "Bangladesh", "codigo_iso3": "BGD", "robots_implantados": 0},
+                {"pais": "Ghana", "codigo_iso3": "GHA", "robots_implantados": 0},
+                {"pais": "Filipinas", "codigo_iso3": "PHL", "robots_implantados": 0},
+                {"pais": "Etiopía", "codigo_iso3": "ETH", "robots_implantados": 0},
+                {"pais": "Ucrania", "codigo_iso3": "UKR", "robots_implantados": 0},
+                {"pais": "Irán", "codigo_iso3": "IRN", "robots_implantados": 0},
+                {"pais": "Arabia Saudita", "codigo_iso3": "SAU", "robots_implantados": 0},
+                {"pais": "Argelia", "codigo_iso3": "DZA", "robots_implantados": 0},
+                {"pais": "Marruecos", "codigo_iso3": "MAR", "robots_implantados": 0}
+            ];
+
+            // Extract necessary data for Plotly
+            const locations = data.map(d => d.codigo_iso3); // ISO 3-letter codes for countries
+            const zValues = data.map(d => d.robots_implantados); // Robot counts for coloring
+            // Custom text to display on hover for each country
+            const textValues = data.map(d => `${d.pais}: ${d.robots_implantados.toLocaleString()} robots`);
+
+            // Find the maximum robot count to normalize the color scale correctly
+            const maxRobots = Math.max(...zValues);
+
+            // Define a custom colorscale for Plotly
+            // This scale ensures:
+            // - Values of 0 are a distinct light grey (rgb(180, 180, 180)).
+            // - Values slightly above 0 start a vibrant yellow (rgb(255, 255, 102)).
+            // - The scale progresses to a vibrant red (rgb(255, 0, 0)) for the maximum value.
+            const customColorscale = [
+                [0, 'rgb(180, 180, 180)'], // Start at 0 (normalized) with light grey
+                // A very small epsilon value to ensure the vibrant scale starts immediately after 0
+                [0.0000001 / maxRobots, 'rgb(255, 255, 102)'], // Start vibrant yellow
+                [1, 'rgb(255, 0, 0)'] // End at 1 (normalized, max value) with vibrant red
+            ];
+
+            // Define the choropleth trace for the map
+            const trace = {
+                type: 'choropleth', // Type of plot: choropleth map
+                locationmode: 'ISO-3', // Use ISO 3-letter codes for locations
+                locations: locations, // Array of country codes
+                z: zValues, // Values used to determine color intensity
+                text: textValues, // Text to display on hover
+                colorscale: customColorscale, // Our custom color scale
+                colorbar: {
+                    title: 'Robots Implantados', // Title for the color bar
+                    titleside: 'right', // Position of the title
+                    // Custom tick values and text for better readability
+                    tickvals: [0, maxRobots / 4, maxRobots / 2, maxRobots * 3 / 4, maxRobots],
+                    ticktext: ['0', `${(maxRobots / 4).toLocaleString()}`, `${(maxRobots / 2).toLocaleString()}`, `${(maxRobots * 3 / 4).toLocaleString()}`, `${maxRobots.toLocaleString()}`],
+                    len: 0.75, // Length of the color bar
+                    yanchor: 'middle',
+                    y: 0.5
+                },
+                marker: {
+                    line: {
+                        color: 'rgb(255,255,255)', // White borders between countries
+                        width: 0.5 // Thin borders
+                    }
+                },
+                hoverinfo: 'text', // Show the custom 'text' on hover
+                zmin: 0, // Ensure the color scale starts from 0
+                zmax: maxRobots // Ensure the color scale goes up to the maximum robot count
+            };
+
+            // Define the layout of the map
+            const layout = {
+                title: {
+                    text: 'Adopción Global de Brazos Robots en la Industria (Estimado IFR)', // Main title of the map
+                    font: {
+                        size: 24,
+                        color: '#2c3e50'
+                    }
+                },
+                geo: {
+                    scope: 'world', // Display the entire world map
+                    showland: true,
+                    landcolor: 'rgb(243, 243, 243)', // Light grey for land areas
+                    countrycolor: 'rgb(204, 204, 204)', // Grey color for countries not in our data
+                    showlakes: true,
+                    lakecolor: 'rgb(255, 255, 255)', // White for lakes
+                    projection: {
+                        type: 'natural earth' // A good projection for world maps
+                    },
+                    bgcolor: 'rgba(0,0,0,0)', // Transparent background for the map itself
+                    framecolor: 'rgba(0,0,0,0)', // Transparent frame
+                    showframe: false, // Do not show a frame around the map
+                    showcoastlines: true,
+                    coastlinecolor: 'rgb(100,100,100)', // Darker grey for coastlines
+                    coastlinewidth: 0.5,
+                    showocean: true,
+                    oceancolor: 'rgb(200, 220, 240)' // Light blue for oceans
+                },
+                margin: { // Margins around the plot
+                    l: 0,
+                    r: 0,
+                    b: 0,
+                    t: 50
+                },
+                paper_bgcolor: 'rgba(0,0,0,0)', // Transparent background for the entire plot area
+                plot_bgcolor: 'rgba(0,0,0,0)' // Transparent background for the plot itself
+            };
+
+            // Create the new Plotly map in the 'robotMap' div
+            // The {responsive: true} option makes the map resize with the container
+            Plotly.newPlot('robotMap', [trace], layout, {responsive: true});
+        });
+    </script>
+</body>
+</html>
